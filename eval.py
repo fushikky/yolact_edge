@@ -649,11 +649,12 @@ class CustomDataParallel(torch.nn.DataParallel):
         return sum(outputs, [])
 
 def evalvideo(net:Yolact, path:str):
+
     # If the path is a digit, parse it as a webcam index
     is_webcam = path.isdigit()
     
     if is_webcam:
-        vid = cv2.VideoCapture(int(path))
+        vid = cv2.VideoCapture(int(path), cv2.CAP_DSHOW)
     else:
         vid = cv2.VideoCapture(path)
     
@@ -666,7 +667,8 @@ def evalvideo(net:Yolact, path:str):
     frame_times = MovingAverage(400)
     fps = 0
     # The 0.8 is to account for the overhead of time.sleep
-    frame_time_target = 1 / vid.get(cv2.CAP_PROP_FPS)
+    # frame_time_target = 1 / vid.get(cv2.CAP_PROP_FPS)
+    frame_time_target = 1 / 30
     running = True
     
     frame_idx = 0
@@ -816,7 +818,9 @@ def evalvideo(net:Yolact, path:str):
         inference_time = time.time() - start_time
         frame_times.add(inference_time)
         inference_times.append(inference_time)
-        fps = args.video_multiframe / frame_times.get_avg()
+        # fps = args.video_multiframe / frame_times.get_avg()
+        print(frame_times.get_avg())
+        fps = 1 / frame_times.get_avg()
         np.save(args.video, np.asarray(inference_times))
 
         print('\rProcessing FPS: %.2f | Video Playback FPS: %.2f | Frames in Buffer: %d    ' % (fps, video_fps, frame_buffer.qsize()), end='')
